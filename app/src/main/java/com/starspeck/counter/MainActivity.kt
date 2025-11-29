@@ -51,7 +51,7 @@ fun App() {
     MaterialTheme(colorScheme = darkColorScheme()) {
         when (screen) {
             "main" -> MainScreen(counters, context.dataStore, scope) { screen = "stats" }
-            "stats" -> StatsScreen(counters) { screen = "main" }
+            "stats" -> StatsScreen(counters, context.dataStore, scope) { screen = "main" }
         }
     }
 }
@@ -98,7 +98,7 @@ fun Side(title: String, color: Color, prefix: String, c: Map<String, Int>, ds: D
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun StatsScreen(c: Map<String, Int>, back: () -> Unit) {
+fun StatsScreen(c: Map<String, Int>, ds: DataStore<Preferences>, scope: CoroutineScope, back: () -> Unit) {
     val starTotal = c.filterKeys { it.startsWith("star_") }.values.sum()
     val shiningTotal = c.filterKeys { it.startsWith("shining_") }.values.sum()
 
@@ -120,14 +120,12 @@ fun StatsScreen(c: Map<String, Int>, back: () -> Unit) {
             item {
                 Card(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp)) {
-                        Text(
-                            "Total geral: ${starTotal + shiningTotal}",
+                        Text("Total geral: ${starTotal + shiningTotal}",
                             fontSize = 22.sp, fontWeight = FontWeight.Bold
                         )
 
                         Spacer(Modifier.height(24.dp))
 
-                        // STAR SPECK
                         Text("Star Speck", color = Color.Cyan, fontSize = 20.sp)
                         (1..5).forEach { v ->
                             val n = c["star_$v"] ?: 0
@@ -137,7 +135,6 @@ fun StatsScreen(c: Map<String, Int>, back: () -> Unit) {
 
                         Spacer(Modifier.height(24.dp))
 
-                        // SHINING STAR
                         Text("Shining Star Speck", color = Color.Yellow, fontSize = 20.sp)
                         (1..5).forEach { v ->
                             val n = c["shining_$v"] ?: 0
@@ -145,6 +142,23 @@ fun StatsScreen(c: Map<String, Int>, back: () -> Unit) {
                             Text("+$v → $n vezes ($pct)")
                         }
                     }
+                }
+            }
+
+            // --- BOTÃO DE RESET ---
+            item {
+                Spacer(Modifier.height(24.dp))
+                Button(
+                    onClick = {
+                        scope.launch {
+                            ds.edit { it.clear() }
+                        }
+                        back()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Zerar todas as estatísticas", color = Color.White)
                 }
             }
         }
