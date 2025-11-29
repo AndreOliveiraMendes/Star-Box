@@ -1,0 +1,45 @@
+# --- Android build ---
+/build/
+/app/build/
+/**/build/
+
+# --- Gradle ---
+.gradle/
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+
+# Local properties (SDK path etc.)
+local.properties
+
+# --- Android Studio ---
+captures/
+.idea/
+*.iml
+
+# --- Kotlin/Java ---
+*.class
+*.jar
+*.war
+*.ear
+
+# --- Log files ---
+*.log
+
+# --- Generated files ---
+gen/
+out/
+
+# --- Cache ---
+.cxx/
+.externalNativeBuild/
+
+# --- Misc ---
+.DS_Store
+Thumbs.db
+
+# --- Termux-specific ---
+/sdk/
+/android-sdk/
+/ndk/
+/android-ndk/
+
