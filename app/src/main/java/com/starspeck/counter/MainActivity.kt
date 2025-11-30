@@ -1,9 +1,14 @@
 package com.starspeck.counter
 
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
@@ -17,22 +22,120 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.FileProvider
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.launch
+import java.io.File
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "counters")
 
 class MainActivity : ComponentActivity() {
+
+    private lateinit var csvPicker: ActivityResultLauncher<String>
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        csvPicker = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+            if (uri != null) {
+                lifecycleScope.launch {
+                    val imported = importCsv(this@MainActivity, uri)
+                    writeImportedData(imported)
+                    Toast.makeText(this@MainActivity, "Importação concluída", Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                Toast.makeText(this@MainActivity, "Nenhum arquivo selecionado", Toast.LENGTH_SHORT).show()
+            }
+        }
+
         setContent { App() }
+    }
+
+    fun pickCsvFile() {
+        csvPicker.launch("text/*")
+    }
+
+    fun exportCsv() {
+        lifecycleScope.launch {
+            val prefs = dataStore.data.first()
+            val counters = mutableMapOf<String, Int>()
+            for (i in 1..5) {
+                counters["star_$i"] = prefs[intPreferencesKey("star_$i")] ?: 0
+                counters["shining_$i"] = prefs[intPreferencesKey("shining_$i")] ?: 0
+            }
+
+            val file = ExportImport.exportCsv(this@MainActivity, counters)
+            shareFile(file)
+        }
+    }
+
+    private fun shareFile(file: File) {
+        val uri: Uri = FileProvider.getUriForFile(
+            this,
+            "${packageName}.provider",
+            file
+        )
+
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/csv"
+            putExtra(Intent.EXTRA_STREAM, uri)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+
+        startActivity(Intent.createChooser(intent, "Exportar CSV"))
+    }
+
+    private suspend fun importCsv(context: Context, uri: Uri): Map<String, Map<Int, Int>> {
+        val result = mutableMapOf<String, MutableMap<Int, Int>>()
+
+        context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { reader ->
+            val first = reader.readLine()
+            val lines = mutableListOf<String>()
+            if (first != null && !first.contains("tipo;"))
+                lines.add(first)
+
+            reader.forEachLine { lines.add(it) }
+
+            for (line in lines) {
+                val parts = line.split(";")
+                if (parts.size == 3) {
+                    val tipo = parts[0]
+                    val qtd = parts[1].toIntOrNull() ?: continue
+                    val total = parts[2].toIntOrNull() ?: continue
+
+                    val mapa = result.getOrPut(tipo) { mutableMapOf() }
+                    mapa[qtd] = total
+                }
+            }
+        }
+
+        return result
+    }
+
+    private fun writeImportedData(map: Map<String, Map<Int, Int>>) {
+        lifecycleScope.launch {
+            dataStore.edit { prefs ->
+                prefs.clear()
+                map.forEach { (tipo, entries) ->
+                    val prefix = if (tipo.trim().equals("Star Speck", ignoreCase = true))
+                        "star_"
+                    else
+                        "shining_"
+
+                    entries.forEach { (qtd, total) ->
+                        prefs[intPreferencesKey(prefix + qtd)] = total
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -41,10 +144,15 @@ class MainActivity : ComponentActivity() {
 fun App() {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val counters by context.dataStore.data.map { p ->
-        (1..5).associate { "star_$it" to (p[intPreferencesKey("star_$it")] ?: 0) } +
-        (1..5).associate { "shining_$it" to (p[intPreferencesKey("shining_$it")] ?: 0) }
-    }.collectAsState(initial = emptyMap())
+
+    val counters by context.dataStore.data
+        .map { p ->
+            buildMap<String, Int> {
+                for (i in 1..5) put("star_$i", p[intPreferencesKey("star_$i")] ?: 0)
+                for (i in 1..5) put("shining_$i", p[intPreferencesKey("shining_$i")] ?: 0)
+            }
+        }
+        .collectAsState(initial = emptyMap())
 
     var screen by remember { mutableStateOf("main") }
 
@@ -61,21 +169,25 @@ fun MainScreen(c: Map<String, Int>, ds: DataStore<Preferences>, scope: Coroutine
     val star = c.filterKeys { it.startsWith("star_") }.values.sum()
     val shining = c.filterKeys { it.startsWith("shining_") }.values.sum()
     val total = star + shining
-    Column(Modifier.fillMaxSize().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+
+    Column(
+        Modifier.fillMaxSize().padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
             Side("Star Speck", Color.Cyan, "star_", c, ds, scope)
             Side("Shining Star", Color.Yellow, "shining_", c, ds, scope)
         }
+
         Spacer(Modifier.height(40.dp))
+
         Card(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp)) {
                 Text("Total: $total", fontSize = 22.sp, fontWeight = FontWeight.Bold)
                 Text("Star: ${if(total>0) "%.1f%%".format(star*100f/total) else "0%"}", color = Color.Cyan)
                 Text("Shining: ${if(total>0) "%.1f%%".format(shining*100f/total) else "0%"}", color = Color.Yellow)
                 Spacer(Modifier.height(12.dp))
-                TextButton(onClick = toStats) {  // ← AQUI FALTAVA FECHAR 
-                    Text("Ver estatísticas detalhadas →")
-                }
+                TextButton(onClick = toStats) { Text("Ver estatísticas detalhadas →") }
             }
         }
     }
@@ -86,43 +198,56 @@ fun Side(title: String, color: Color, prefix: String, c: Map<String, Int>, ds: D
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(title, color = color, fontSize = 18.sp, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(12.dp))
+
         (1..5).forEach { v ->
-            Button(onClick = { scope.launch { ds.edit { it[intPreferencesKey(prefix+v)] = (it[intPreferencesKey(prefix+v)] ?: 0) + 1 } } },
-                colors = ButtonDefaults.buttonColors(containerColor = color), modifier = Modifier.width(80.dp).padding(4.dp)) {
-                Text("+$v", fontSize = 20.sp)
+            Button(
+                onClick = {
+                    scope.launch {
+                        ds.edit {
+                            it[intPreferencesKey(prefix + v)] =
+                                (it[intPreferencesKey(prefix + v)] ?: 0) + 1
+                        }
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = color),
+                modifier = Modifier
+                    .width(80.dp)
+                    .padding(4.dp)
+            ) {
+                Text("★ $v")
             }
         }
-        Text("${c.filterKeys { it.startsWith(prefix) }.values.sum()}", color = color, fontSize = 28.sp, fontWeight = FontWeight.Bold)
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StatsScreen(c: Map<String, Int>, ds: DataStore<Preferences>, scope: CoroutineScope, back: () -> Unit) {
+    val context = LocalContext.current
+
     val starTotal = c.filterKeys { it.startsWith("star_") }.values.sum()
     val shiningTotal = c.filterKeys { it.startsWith("shining_") }.values.sum()
 
-    Scaffold(topBar = {
-        CenterAlignedTopAppBar(
-            title = { Text("Estatísticas") },
-            navigationIcon = {
-                IconButton(onClick = back) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = null)
+    Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = { Text("Estatísticas") },
+                navigationIcon = {
+                    IconButton(onClick = back) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = null)
+                    }
                 }
-            }
-        )
-    }) { p ->
+            )
+        }
+    ) { p ->
         LazyColumn(
-            Modifier
-                .padding(p)
-                .padding(16.dp)
+            Modifier.padding(p).padding(16.dp)
         ) {
             item {
                 Card(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp)) {
                         Text("Total geral: ${starTotal + shiningTotal}",
-                            fontSize = 22.sp, fontWeight = FontWeight.Bold
-                        )
+                            fontSize = 22.sp, fontWeight = FontWeight.Bold)
 
                         Spacer(Modifier.height(24.dp))
 
@@ -145,14 +270,27 @@ fun StatsScreen(c: Map<String, Int>, ds: DataStore<Preferences>, scope: Coroutin
                 }
             }
 
-            // --- BOTÃO DE RESET ---
+            item {
+                Spacer(Modifier.height(24.dp))
+                Button(
+                    onClick = { (context as? MainActivity)?.exportCsv() },
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text("Exportar CSV") }
+            }
+
+            item {
+                Spacer(Modifier.height(12.dp))
+                Button(
+                    onClick = { (context as? MainActivity)?.pickCsvFile() },
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text("Importar CSV") }
+            }
+
             item {
                 Spacer(Modifier.height(24.dp))
                 Button(
                     onClick = {
-                        scope.launch {
-                            ds.edit { it.clear() }
-                        }
+                        scope.launch { ds.edit { it.clear() } }
                         back()
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
