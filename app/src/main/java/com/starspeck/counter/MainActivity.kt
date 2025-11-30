@@ -11,6 +11,8 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
@@ -29,11 +31,11 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.lifecycleScope
+import java.io.File
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import java.io.File
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "counters")
 
@@ -158,9 +160,26 @@ fun App() {
 
     MaterialTheme(colorScheme = darkColorScheme()) {
         when (screen) {
-            "main" -> MainScreen(counters, context.dataStore, scope) { screen = "stats" }
-            "stats" -> StatsScreen(counters, context.dataStore, scope) { screen = "main" }
-        }
+            "main" -> MainScreen(counters, context.dataStore, scope) {
+                screen = "stats"
+            }
+
+            "stats" -> StatsScreen(
+                counters,
+                context.dataStore,
+                scope,
+                back = { screen = "main" },
+                toManualImport = { screen = "manual_import" }
+            )
+
+            "manual_import" -> ManualImportScreen(
+                counters,
+                context.dataStore,
+                scope,
+                onBack = { screen = "main" }
+                )
+            }
+
     }
 }
 
@@ -220,9 +239,90 @@ fun Side(title: String, color: Color, prefix: String, c: Map<String, Int>, ds: D
     }
 }
 
+@Composable
+fun ManualImportScreen(
+    current: Map<String, Int>,
+    ds: DataStore<Preferences>,
+    scope: CoroutineScope,
+    onBack: () -> Unit
+) {
+    val fields = remember {
+        mutableStateMapOf<String, String>().apply {
+            for (i in 1..5) {
+                this["star_$i"] = current["star_$i"]?.toString() ?: "0"
+                this["shining_$i"] = current["shining_$i"]?.toString() ?: "0"
+            }
+        }
+    }
+
+    val scroll = rememberScrollState()
+
+    Column(
+        Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+            .verticalScroll(scroll)   // 👈 rolagem ativada aqui
+    ) {
+        Text("Importar manualmente", fontSize = 22.sp)
+
+        Spacer(Modifier.height(16.dp))
+
+        // STAR
+        Text("Star Speck", color = Color.Cyan, fontWeight = FontWeight.Bold)
+        for (i in 1..5) {
+            OutlinedTextField(
+                value = fields["star_$i"] ?: "",
+                onValueChange = { fields["star_$i"] = it.filter { ch -> ch.isDigit() } },
+                label = { Text("star_$i") },
+                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+            )
+        }
+
+        Spacer(Modifier.height(12.dp))
+
+        // SHINING
+        Text("Shining Star Speck", color = Color.Yellow, fontWeight = FontWeight.Bold)
+        for (i in 1..5) {
+            OutlinedTextField(
+                value = fields["shining_$i"] ?: "",
+                onValueChange = { fields["shining_$i"] = it.filter { ch -> ch.isDigit() } },
+                label = { Text("shining_$i") },
+                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+            )
+        }
+
+        Spacer(Modifier.height(20.dp))
+
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Button(onClick = onBack) {
+                Text("Cancelar")
+            }
+
+            Button(onClick = {
+                scope.launch {
+                    ds.edit { prefs ->
+                        for ((k, v) in fields) {
+                            prefs[intPreferencesKey(k)] = v.toIntOrNull() ?: 0
+                        }
+                    }
+                }
+                onBack()
+            }) {
+                Text("Importar")
+            }
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun StatsScreen(c: Map<String, Int>, ds: DataStore<Preferences>, scope: CoroutineScope, back: () -> Unit) {
+fun StatsScreen(
+    c: Map<String, Int>,
+    ds: DataStore<Preferences>,
+    scope: CoroutineScope,
+    back: () -> Unit,
+    toManualImport: () -> Unit
+) {
     val context = LocalContext.current
 
     val starTotal = c.filterKeys { it.startsWith("star_") }.values.sum()
@@ -284,6 +384,14 @@ fun StatsScreen(c: Map<String, Int>, ds: DataStore<Preferences>, scope: Coroutin
                     onClick = { (context as? MainActivity)?.pickCsvFile() },
                     modifier = Modifier.fillMaxWidth()
                 ) { Text("Importar CSV") }
+            }
+
+            item {
+                Spacer(Modifier.height(12.dp))
+                Button(
+                    onClick = toManualImport,
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text("Importar manualmente valores") }
             }
 
             item {
