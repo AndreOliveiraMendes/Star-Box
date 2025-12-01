@@ -355,7 +355,8 @@ fun StatsScreen(
                         (1..5).forEach { v ->
                             val n = c["star_$v"] ?: 0
                             val pct = if (starTotal > 0) "%.1f%%".format(n * 100f / starTotal) else "0%"
-                            Text("+$v → $n vezes ($pct)")
+                            val pcrt = if (starTotal + shiningTotal > 0) "%.1f%%".format(n * 100f / (starTotal + shiningTotal)) else "0%"
+                            Text("+$v → $n vezes ($pct) [$pcrt]")
                         }
 
                         Spacer(Modifier.height(24.dp))
@@ -364,7 +365,8 @@ fun StatsScreen(
                         (1..5).forEach { v ->
                             val n = c["shining_$v"] ?: 0
                             val pct = if (shiningTotal > 0) "%.1f%%".format(n * 100f / shiningTotal) else "0%"
-                            Text("+$v → $n vezes ($pct)")
+                            val pcrt = if (starTotal + shiningTotal > 0) "%.1f%%".format(n * 100f / (starTotal + shiningTotal)) else "0%"
+                            Text("+$v → $n vezes ($pct) [$pcrt]")
                         }
                     }
                 }
