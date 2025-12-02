@@ -327,6 +327,7 @@ fun StatsScreen(
 
     val starTotal = c.filterKeys { it.startsWith("star_") }.values.sum()
     val shiningTotal = c.filterKeys { it.startsWith("shining_") }.values.sum()
+    val grandTotal = starTotal + shiningTotal
 
     Scaffold(
         topBar = {
@@ -339,35 +340,43 @@ fun StatsScreen(
                 }
             )
         }
-    ) { p ->
+    ) { padding ->
         LazyColumn(
-            Modifier.padding(p).padding(16.dp)
+            Modifier
+                .padding(padding)
+                .padding(16.dp)
         ) {
             item {
                 Card(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp)) {
-                        Text("Total geral: ${starTotal + shiningTotal}",
-                            fontSize = 22.sp, fontWeight = FontWeight.Bold)
+
+                        Text(
+                            "Total geral: $grandTotal",
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold
+                        )
 
                         Spacer(Modifier.height(24.dp))
 
-                        Text("Star Speck", color = Color.Cyan, fontSize = 20.sp)
-                        (1..5).forEach { v ->
-                            val n = c["star_$v"] ?: 0
-                            val pct = if (starTotal > 0) "%.1f%%".format(n * 100f / starTotal) else "0%"
-                            val pcrt = if (starTotal + shiningTotal > 0) "%.1f%%".format(n * 100f / (starTotal + shiningTotal)) else "0%"
-                            Text("+$v → $n vezes ($pct) [$pcrt]")
-                        }
+                        StatsSection(
+                            title = "Star Speck",
+                            titleColor = Color.Cyan,
+                            prefix = "star",
+                            data = c,
+                            categoryTotal = starTotal,
+                            grandTotal = grandTotal
+                        )
 
                         Spacer(Modifier.height(24.dp))
 
-                        Text("Shining Star Speck", color = Color.Yellow, fontSize = 20.sp)
-                        (1..5).forEach { v ->
-                            val n = c["shining_$v"] ?: 0
-                            val pct = if (shiningTotal > 0) "%.1f%%".format(n * 100f / shiningTotal) else "0%"
-                            val pcrt = if (starTotal + shiningTotal > 0) "%.1f%%".format(n * 100f / (starTotal + shiningTotal)) else "0%"
-                            Text("+$v → $n vezes ($pct) [$pcrt]")
-                        }
+                        StatsSection(
+                            title = "Shining Star Speck",
+                            titleColor = Color.Yellow,
+                            prefix = "shining",
+                            data = c,
+                            categoryTotal = shiningTotal,
+                            grandTotal = grandTotal
+                        )
                     }
                 }
             }
@@ -377,7 +386,9 @@ fun StatsScreen(
                 Button(
                     onClick = { (context as? MainActivity)?.exportCsv() },
                     modifier = Modifier.fillMaxWidth()
-                ) { Text("Exportar CSV") }
+                ) {
+                    Text("Exportar CSV")
+                }
             }
 
             item {
@@ -385,7 +396,9 @@ fun StatsScreen(
                 Button(
                     onClick = { (context as? MainActivity)?.pickCsvFile() },
                     modifier = Modifier.fillMaxWidth()
-                ) { Text("Importar CSV") }
+                ) {
+                    Text("Importar CSV")
+                }
             }
 
             item {
@@ -393,7 +406,9 @@ fun StatsScreen(
                 Button(
                     onClick = toManualImport,
                     modifier = Modifier.fillMaxWidth()
-                ) { Text("Importar manualmente valores") }
+                ) {
+                    Text("Importar manualmente valores")
+                }
             }
 
             item {
@@ -403,13 +418,42 @@ fun StatsScreen(
                         scope.launch { ds.edit { it.clear() } }
                         back()
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Red
+                    ),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Zerar todas as estatísticas", color = Color.White)
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun StatsSection(
+    title: String,
+    titleColor: Color,
+    prefix: String,
+    data: Map<String, Int>,
+    categoryTotal: Int,
+    grandTotal: Int
+) {
+    Text(title, color = titleColor, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+
+    for (i in 1..5) {
+        val key = "${prefix}_$i"
+        val value = data[key] ?: 0
+
+        val pctCategory =
+            if (categoryTotal > 0) "%.1f%%".format(value * 100f / categoryTotal)
+            else "0%"
+
+        val pctTotal =
+            if (grandTotal > 0) "%.1f%%".format(value * 100f / grandTotal)
+            else "0%"
+
+        Text("+$i → $value vezes ($pctCategory) [$pctTotal]")
     }
 }
 
