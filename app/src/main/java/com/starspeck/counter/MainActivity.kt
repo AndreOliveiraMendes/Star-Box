@@ -14,7 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -194,8 +194,8 @@ fun MainScreen(c: Map<String, Int>, ds: DataStore<Preferences>, scope: Coroutine
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-            Side("Star Speck", Color.Cyan, "star_", c, ds, scope)
-            Side("Shining Star", Color.Yellow, "shining_", c, ds, scope)
+            Side("Star Speck", Color.Cyan, "star_", ds, scope)
+            Side("Shining Star", Color.Yellow, "shining_", ds, scope)
         }
 
         Spacer(Modifier.height(40.dp))
@@ -213,7 +213,7 @@ fun MainScreen(c: Map<String, Int>, ds: DataStore<Preferences>, scope: Coroutine
 }
 
 @Composable
-fun Side(title: String, color: Color, prefix: String, c: Map<String, Int>, ds: DataStore<Preferences>, scope: CoroutineScope) {
+fun Side(title: String, color: Color, prefix: String, ds: DataStore<Preferences>, scope: CoroutineScope) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(title, color = color, fontSize = 18.sp, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(12.dp))
@@ -337,7 +337,10 @@ fun StatsScreen(
                 title = { Text("Estatísticas") },
                 navigationIcon = {
                     IconButton(onClick = back) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = null)
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = null
+                        )
                     }
                 }
             )
@@ -368,7 +371,10 @@ fun StatsScreen(
                         val tabs = listOf("Star Speck", "Shining Star Speck")
                         val tabColors = listOf(Color.Cyan, Color.Yellow)
 
-                        TabRow(selectedTabIndex = selectedTab) {
+                        TabRow(
+                            selectedTabIndex = selectedTab,
+                            containerColor = tabColors[selectedTab]
+                        ) {
                             tabs.forEachIndexed { index, title ->
                                 Tab(
                                     selected = selectedTab == index,
