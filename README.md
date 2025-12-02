@@ -10,9 +10,10 @@ Ele demonstra uma estrutura básica de app Android e inclui um fluxo simples de 
 <p align="center">
   <img src="https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white"/>
   <img src="https://img.shields.io/badge/Kotlin-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Jetpack%20Compose-4285F4?style=for-the-badge&logo=jetpackcompose&logoColor=white"/>
   <img src="https://img.shields.io/badge/Gradle-02303A?style=for-the-badge&logo=gradle&logoColor=white"/>
-  <img src="https://img.shields.io/badge/License-Soon-lightgrey?style=for-the-badge"/>
-  <img src="https://img.shields.io/badge/Build-Debug-blue?style=for-the-badge"/>
+  <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge&logo=open-source-initiative&logoColor=white"/>
+  <!--<img src="https://img.shields.io/github/actions/workflow/status/AndreOliveiraMendes/StarSpeckCounter/android.yml?style=for-the-badge&label=CI"/>-->
 </p>
 
 ---
@@ -154,5 +155,5 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 ## 📄 Licença
 
-soon
-
+Este projeto é licenciado sob a licença **MIT**.  
+Consulte o arquivo [LICENSE](LICENSE) para mais detalhes.
