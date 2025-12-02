@@ -329,6 +329,8 @@ fun StatsScreen(
     val shiningTotal = c.filterKeys { it.startsWith("shining_") }.values.sum()
     val grandTotal = starTotal + shiningTotal
 
+    var selectedTab by remember { mutableIntStateOf(0) }
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -348,39 +350,63 @@ fun StatsScreen(
         ) {
             item {
                 Card(Modifier.fillMaxWidth()) {
+
                     Column(Modifier.padding(16.dp)) {
 
+                        // TOTAL GERAL
                         Text(
                             "Total geral: $grandTotal",
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Bold
                         )
 
-                        Spacer(Modifier.height(24.dp))
+                        Spacer(Modifier.height(16.dp))
 
-                        StatsSection(
-                            title = "Star Speck",
-                            titleColor = Color.Cyan,
-                            prefix = "star",
-                            data = c,
-                            categoryTotal = starTotal,
-                            grandTotal = grandTotal
-                        )
+                        // ───────────────────────────────────────────
+                        // TABS
+                        // ───────────────────────────────────────────
+                        val tabs = listOf("Star Speck", "Shining Star Speck")
+                        val tabColors = listOf(Color.Cyan, Color.Yellow)
 
-                        Spacer(Modifier.height(24.dp))
+                        TabRow(selectedTabIndex = selectedTab) {
+                            tabs.forEachIndexed { index, title ->
+                                Tab(
+                                    selected = selectedTab == index,
+                                    onClick = { selectedTab = index },
+                                    text = { Text(title) }
+                                )
+                            }
+                        }
 
-                        StatsSection(
-                            title = "Shining Star Speck",
-                            titleColor = Color.Yellow,
-                            prefix = "shining",
-                            data = c,
-                            categoryTotal = shiningTotal,
-                            grandTotal = grandTotal
-                        )
+                        Spacer(Modifier.height(12.dp))
+
+                        // ───────────────────────────────────────────
+                        // CONTEÚDO DA ABA SELECIONADA
+                        // ───────────────────────────────────────────
+                        when (selectedTab) {
+                            0 -> StatsSection(
+                                title = "Star Speck",
+                                titleColor = Color.Cyan,
+                                prefix = "star",
+                                data = c,
+                                categoryTotal = starTotal,
+                                grandTotal = grandTotal
+                            )
+
+                            1 -> StatsSection(
+                                title = "Shining Star Speck",
+                                titleColor = Color.Yellow,
+                                prefix = "shining",
+                                data = c,
+                                categoryTotal = shiningTotal,
+                                grandTotal = grandTotal
+                            )
+                        }
                     }
                 }
             }
 
+            // BOTÕES
             item {
                 Spacer(Modifier.height(24.dp))
                 Button(
@@ -440,6 +466,8 @@ private fun StatsSection(
     grandTotal: Int
 ) {
     Text(title, color = titleColor, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+
+    Spacer(Modifier.height(8.dp))
 
     for (i in 1..5) {
         val key = "${prefix}_$i"
