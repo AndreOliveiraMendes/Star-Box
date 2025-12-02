@@ -13,7 +13,7 @@ Ele demonstra uma estrutura básica de app Android e inclui um fluxo simples de 
   <img src="https://img.shields.io/badge/Jetpack%20Compose-4285F4?style=for-the-badge&logo=jetpackcompose&logoColor=white"/>
   <img src="https://img.shields.io/badge/Gradle-02303A?style=for-the-badge&logo=gradle&logoColor=white"/>
   <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge&logo=open-source-initiative&logoColor=white"/>
-  <!--<img src="https://img.shields.io/github/actions/workflow/status/AndreOliveiraMendes/StarSpeckCounter/android.yml?style=for-the-badge&label=CI"/>-->
+  <img src="https://img.shields.io/github/actions/workflow/status/AndreOliveiraMendes/Star-Box/android-debug.yml?style=for-the-badge&label=CI"/>
 </p>
 
 ---
@@ -22,22 +22,60 @@ Ele demonstra uma estrutura básica de app Android e inclui um fluxo simples de 
 
 ```
 .
+├── .github
+│   └── workflows
+│       └── android-debug.yml
+├── .gitignore
+├── LICENSE
+├── README.md
 ├── app
-│   ├── build.gradle.kts
-│   └── src
-│       └── main
-│           ├── AndroidManifest.xml
-│           └── java
-│               └── com
-│                   └── starspeck
-│                       └── counter
-│                           └── MainActivity.kt
-├── deploy_debug.sh
+│   ├── build.gradle.kts
+│   └── src
+│       └── main
+│           ├── AndroidManifest.xml
+│           ├── java
+│           │   └── com
+│           │       └── starspeck
+│           │           └── counter
+│           │               ├── ExportImport.kt
+│           │               └── MainActivity.kt
+│           └── res
+│               ├── mipmap-anydpi-v26
+│               │   └── ic_launcher.xml
+│               ├── mipmap-hdpi
+│               │   ├── ic_launcher.png
+│               │   ├── ic_launcher_background.png
+│               │   ├── ic_launcher_foreground.png
+│               │   └── ic_launcher_monochrome.png
+│               ├── mipmap-mdpi
+│               │   ├── ic_launcher.png
+│               │   ├── ic_launcher_background.png
+│               │   ├── ic_launcher_foreground.png
+│               │   └── ic_launcher_monochrome.png
+│               ├── mipmap-xhdpi
+│               │   ├── ic_launcher.png
+│               │   ├── ic_launcher_background.png
+│               │   ├── ic_launcher_foreground.png
+│               │   └── ic_launcher_monochrome.png
+│               ├── mipmap-xxhdpi
+│               │   ├── ic_launcher.png
+│               │   ├── ic_launcher_background.png
+│               │   ├── ic_launcher_foreground.png
+│               │   └── ic_launcher_monochrome.png
+│               ├── mipmap-xxxhdpi
+│               │   ├── ic_launcher.png
+│               │   ├── ic_launcher_background.png
+│               │   ├── ic_launcher_foreground.png
+│               │   └── ic_launcher_monochrome.png
+│               ├── play_store_512.png
+│               └── xml
+│                   └── file_paths.xml
 ├── build.gradle.kts
+├── deploy_debug.sh
 ├── gradle
-│   └── wrapper
-│       ├── gradle-wrapper.jar
-│       └── gradle-wrapper.properties
+│   └── wrapper
+│       ├── gradle-wrapper.jar
+│       └── gradle-wrapper.properties
 ├── gradle.properties
 ├── gradlew
 └── settings.gradle.kts
