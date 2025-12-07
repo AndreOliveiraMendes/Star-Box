@@ -1,0 +1,3 @@
+[submodule "gradle_shared"]
+	path = gradle_shared
+	url = ../shared-gradle/
