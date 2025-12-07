@@ -26,6 +26,7 @@ Ele demonstra uma estrutura básica de app Android e inclui um fluxo simples de 
 │   └── workflows
 │       └── android-debug.yml
 ├── .gitignore
+├── .gitmodules
 ├── LICENSE
 ├── README.md
 ├── app
@@ -72,12 +73,8 @@ Ele demonstra uma estrutura básica de app Android e inclui um fluxo simples de 
 │                   └── file_paths.xml
 ├── build.gradle.kts
 ├── deploy_debug.sh
-├── gradle
-│   └── wrapper
-│       ├── gradle-wrapper.jar
-│       └── gradle-wrapper.properties
 ├── gradle.properties
-├── gradlew
+├── gradle_shared (submodulo)
 └── settings.gradle.kts
 ```
 
@@ -104,7 +101,7 @@ Permissão para executar scripts (chmod +x deploy_debug.sh)
 Compile o APK de debug usando o Gradle Wrapper:
 
 ```bash
-./gradlew assembleDebug
+./gradle_shared/gradlew assembleDebug
 ```
 
 APK resultante:
