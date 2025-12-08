@@ -53,6 +53,11 @@ jobs:
 
       - name: Dump contexts
         run: |
+          echo "secrets:"
+          secrets
+
+      - name: Dump contexts
+        run: |
           echo "Env:"
           env
   
