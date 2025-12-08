@@ -46,6 +46,10 @@ jobs:
           RELEASE_KEY_ALIAS=${{ secrets.RELEASE_KEY_ALIAS }}
           RELEASE_KEY_PASSWORD=${{ secrets.RELEASE_KEY_PASSWORD }}
           EOF
+
+      - name: debug
+        run: |
+          ls -lha
           
       # ------------------------------
       #  🏗️ BUILD RELEASE ASSINADO
