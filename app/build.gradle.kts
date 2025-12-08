@@ -26,12 +26,10 @@ android {
 
     signingConfigs {
         create("release") {
-            val props = project.properties
-    
-            storeFile = file(props["storeFile"])
-            storePassword = props["storePassword"] as String
-            keyAlias = props["keyAlias"] as String
-            keyPassword = props["keyPassword"] as String
+            storeFile = file(project.properties["RELEASE_STORE_FILE"])
+            storePassword = project.properties["RELEASE_STORE_PASSWORD"] as String
+            keyAlias = project.properties["RELEASE_KEY_ALIAS"] as String
+            keyPassword = project.properties["RELEASE_KEY_PASSWORD"] as String
         }
     }
 
