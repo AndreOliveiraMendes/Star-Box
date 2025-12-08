@@ -50,6 +50,7 @@ jobs:
       - name: debug
         run: |
           ls -lha
+          pwd
           
       # ------------------------------
       #  🏗️ BUILD RELEASE ASSINADO
