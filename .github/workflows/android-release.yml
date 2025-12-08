@@ -53,7 +53,7 @@ jobs:
           
 
       - name: Debug gradle.properties
-        run: ls -a ./
+        run: ls -lha ./
 
       - name: Debug gradle.properties
         run: cat ~/.gradle/gradle.properties
