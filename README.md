@@ -13,8 +13,8 @@ Ele demonstra uma estrutura básica de app Android e inclui um fluxo simples de 
   <img src="https://img.shields.io/badge/Jetpack%20Compose-4285F4?style=for-the-badge&logo=jetpackcompose&logoColor=white"/>
   <img src="https://img.shields.io/badge/Gradle-02303A?style=for-the-badge&logo=gradle&logoColor=white"/>
   <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge&logo=open-source-initiative&logoColor=white"/>
-  <img src="https://img.shields.io/github/actions/workflow/status/AndreOliveiraMendes/Star-Box/android-debug.yml?style=for-the-badge&label=CI debug"/>
-  <img src="https://img.shields.io/github/actions/workflow/status/AndreOliveiraMendes/Star-Box/android-release.yml?style=for-the-badge&label=CI release"/>
+  <img src="https://img.shields.io/github/actions/workflow/status/AndreOliveiraMendes/Star-Box/android-debug.yml?style=for-the-badge&label=CID"/>
+  <img src="https://img.shields.io/github/actions/workflow/status/AndreOliveiraMendes/Star-Box/android-release.yml?style=for-the-badge&label=CIR"/>
 </p>
 
 ---
