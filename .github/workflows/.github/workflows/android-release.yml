@@ -1,0 +1,63 @@
+name: Android Release Build
+
+on:
+  workflow_dispatch:  # você dispara manualmente
+  push:
+    tags:
+      - "v*"          # opcional: gera quando você cria uma tag como v1.0.0
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout (com submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Gradle cache
+        uses: gradle/actions/setup-gradle@v3
+
+      # ------------------------------
+      #  🔐 RESTAURA A KEYSTORE
+      # ------------------------------
+      - name: Decode keystore
+        run: |
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > ./keystore.jks
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+
+      # ------------------------------
+      #  🔧 CONFIGURA PROPRIEDADES
+      # ------------------------------
+      - name: Create release gradle.properties
+        run: |
+          mkdir -p ~/.gradle
+          cat <<EOF > ~/.gradle/gradle.properties
+          RELEASE_STORE_FILE=./keystore.jks
+          RELEASE_STORE_PASSWORD=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          RELEASE_KEY_ALIAS=${{ secrets.ANDROID_KEY_ALIAS }}
+          RELEASE_KEY_PASSWORD=${{ secrets.ANDROID_KEY_PASSWORD }}
+          EOF
+
+      # ------------------------------
+      #  🏗️ BUILD RELEASE ASSINADO
+      # ------------------------------
+      - name: Build Release APK
+        run: ./gradlew assembleRelease
+
+      # ------------------------------
+      #  📦 UPLOAD DO APK RELEASE
+      # ------------------------------
+      - name: Upload APK (Release)
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release
+          path: app/build/outputs/apk/release/app-release.apk
