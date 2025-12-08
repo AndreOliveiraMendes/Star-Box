@@ -46,12 +46,6 @@ jobs:
           RELEASE_KEY_ALIAS=${{ secrets.RELEASE_KEY_ALIAS }}
           RELEASE_KEY_PASSWORD=${{ secrets.RELEASE_KEY_PASSWORD }}
           EOF
-  
-      - name: Debug gradle.properties
-        run: ls -lha ./
-
-      - name: Debug gradle.properties
-        run: cat ~/.gradle/gradle.properties
           
       # ------------------------------
       #  🏗️ BUILD RELEASE ASSINADO
