@@ -34,9 +34,6 @@ jobs:
           RELEASE_KEY_PASSWORD=${{ secrets.ANDROID_KEY_PASSWORD }}
           EOF
 
-      - name: Debug gradle.properties
-        run: cat ~/.gradle/gradle.properties
-
       - name: Build Debug APK
         run: ./gradle_shared/gradlew assembleDebug
 
