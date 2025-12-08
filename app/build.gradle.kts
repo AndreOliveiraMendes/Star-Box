@@ -26,10 +26,12 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file(project.properties["storeFile"] ?: "missing.jks")
-            storePassword = project.properties["storePassword"] as String?
-            keyAlias = project.properties["keyAlias"] as String?
-            keyPassword = project.properties["keyPassword"] as String?
+            val props = project.properties
+    
+            storeFile = file(props["storeFile"])
+            storePassword = props["storePassword"] as String
+            keyAlias = props["keyAlias"] as String
+            keyPassword = props["keyPassword"] as String
         }
     }
 
