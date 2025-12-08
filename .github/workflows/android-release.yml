@@ -47,6 +47,12 @@ jobs:
           RELEASE_KEY_PASSWORD=${{ secrets.ANDROID_KEY_PASSWORD }}
           EOF
 
+      - name: Debug gradle.properties
+        run: ls -a ./
+
+      - name: Debug gradle.properties
+        run: cat ~/.gradle/gradle.properties
+          
       # ------------------------------
       #  🏗️ BUILD RELEASE ASSINADO
       # ------------------------------
