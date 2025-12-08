@@ -50,6 +50,7 @@ jobs:
 
       - name: debug
         run: |
+          pwd
           ls -lha
           cat ~/.gradle/gradle.properties
           
