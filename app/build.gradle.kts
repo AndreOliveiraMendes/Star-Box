@@ -26,10 +26,10 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file("${System.getProperty("user.home")}/.keystores/starspeck.jks")
-            storePassword = System.getenv("KEYSTORE_PASSWORD")
-            keyAlias = "starspeck"
-            keyPassword = System.getenv("KEY_PASSWORD")
+            storeFile = file(project.properties["storeFile"] ?: "missing.jks")
+            storePassword = project.properties["storePassword"] as String?
+            keyAlias = project.properties["keyAlias"] as String?
+            keyPassword = project.properties["keyPassword"] as String?
         }
     }
 
