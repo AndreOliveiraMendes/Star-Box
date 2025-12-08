@@ -30,9 +30,9 @@ jobs:
       # ------------------------------
       - name: Decode keystore
         run: |
-          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > ./keystore.jks
+          echo ${{ secrets.ANDROID_KEYSTORE_BASE64 }} | base64 -d > ./keystore.jks
         env:
-          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # ------------------------------
       #  🔧 CONFIGURA PROPRIEDADES
@@ -42,19 +42,12 @@ jobs:
           mkdir -p ~/.gradle
           cat <<EOF > ~/.gradle/gradle.properties
           RELEASE_STORE_FILE=./keystore.jks
-          RELEASE_STORE_PASSWORD=$ANDROID_KEYSTORE_PASSWORD
-          RELEASE_KEY_ALIAS=$ANDROID_KEY_ALIAS
-          RELEASE_KEY_PASSWORD=$ANDROID_KEY_PASSWORD
+          RELEASE_STORE_PASSWORD=${{ secrets.RELEASE_STORE_PASSWORD }}
+          RELEASE_KEY_ALIAS=${{ secrets.RELEASE_KEY_ALIAS }}
+          RELEASE_KEY_PASSWORD=${{ secrets.RELEASE_KEY_PASSWORD }}
           EOF
         env:
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
-          ANDROID_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
-
-      - name: Dump contexts
-        run: |
-          echo "secrets:"
-          secrets
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Dump contexts
         run: |
