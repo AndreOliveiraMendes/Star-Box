@@ -49,10 +49,11 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Dump contexts
+      - name: Debug secrets
         run: |
-          echo "Env:"
-          env
+          echo "STORE_PASS length: ${#RELEASE_STORE_PASSWORD}"
+        env:
+          RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
   
       - name: Debug gradle.properties
         run: ls -lha ./
