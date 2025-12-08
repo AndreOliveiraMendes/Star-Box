@@ -26,8 +26,8 @@ jobs:
 
       - name: Create release gradle.properties
         run: |
-    mkdir -p ~/.gradle
-    cat <<EOF > ~/.gradle/gradle.properties
+          mkdir -p ~/.gradle
+          cat <<EOF > ~/.gradle/gradle.properties
 RELEASE_STORE_FILE=./keystore.jks
 RELEASE_STORE_PASSWORD=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
 RELEASE_KEY_ALIAS=${{ secrets.ANDROID_KEY_ALIAS }}
