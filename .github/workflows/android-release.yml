@@ -4,30 +4,45 @@ on:
   workflow_dispatch:
   push:
     tags:
-      - "v*"
+      - "v*"   # dispara automaticamente quando você der: git push origin v1.0.0
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
+      # -----------------------------
+      #  CLONE
+      # -----------------------------
       - name: Checkout
         uses: actions/checkout@v4
         with:
           submodules: recursive
 
+      # -----------------------------
+      #  JDK
+      # -----------------------------
       - name: Setup JDK
         uses: actions/setup-java@v4
         with:
           distribution: "temurin"
           java-version: "17"
 
+      # -----------------------------
+      #  CACHE do Gradle
+      # -----------------------------
       - name: Gradle cache
         uses: gradle/actions/setup-gradle@v3
 
+      # -----------------------------
+      #  RESTAURAR KEYSTORE
+      # -----------------------------
       - name: Restore keystore
         run: echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > ./keystore.jks
 
+      # -----------------------------
+      #  CRIAR ~/.gradle/gradle.properties
+      # -----------------------------
       - name: Create gradle.properties
         run: |
           mkdir -p ~/.gradle
@@ -38,17 +53,31 @@ jobs:
           RELEASE_KEY_PASSWORD=${{ secrets.RELEASE_KEY_PASSWORD }}
           EOF
 
+      # -----------------------------
+      #  BUILD RELEASE ASSINADO
+      # -----------------------------
       - name: Build Release APK
         run: ./gradle_shared/gradlew assembleRelease
 
-      - name: Upload APK (Release)
-        uses: actions/upload-artifact@v4
+      # -----------------------------
+      #  CRIAR RELEASE NO GITHUB
+      # -----------------------------
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: app-release
-          path: app/build/outputs/apk/release/app-release.apk
+          tag_name: ${{ github.ref_name }}     # usa a tag que disparou o workflow
+          name: Release ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          body: |
+            🚀 Build gerado automaticamente.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Publish APK in Release
-        if: startsWith(github.ref, 'refs/tags/')
+      # -----------------------------
+      #  ENVIAR APK PARA A RELEASE
+      # -----------------------------
+      - name: Upload APK to Release
         uses: softprops/action-gh-release@v2
         with:
           files: app/build/outputs/apk/release/app-release.apk
