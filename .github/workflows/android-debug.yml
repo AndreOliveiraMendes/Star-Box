@@ -24,6 +24,9 @@ jobs:
       - name: Gradle cache
         uses: gradle/actions/setup-gradle@v3
 
+      - name: Debug gradle.properties
+        run: cat ~/.gradle/gradle.properties
+
       - name: Build Debug APK
         run: ./gradle_shared/gradlew assembleDebug
 
