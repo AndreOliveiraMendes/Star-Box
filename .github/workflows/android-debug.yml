@@ -24,6 +24,16 @@ jobs:
       - name: Gradle cache
         uses: gradle/actions/setup-gradle@v3
 
+      - name: Create release gradle.properties
+        run: |
+    mkdir -p ~/.gradle
+    cat <<EOF > ~/.gradle/gradle.properties
+RELEASE_STORE_FILE=./keystore.jks
+RELEASE_STORE_PASSWORD=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+RELEASE_KEY_ALIAS=${{ secrets.ANDROID_KEY_ALIAS }}
+RELEASE_KEY_PASSWORD=${{ secrets.ANDROID_KEY_PASSWORD }}
+EOF
+
       - name: Debug gradle.properties
         run: cat ~/.gradle/gradle.properties
 
