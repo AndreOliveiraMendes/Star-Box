@@ -51,7 +51,7 @@ jobs:
       #  🏗️ BUILD RELEASE ASSINADO
       # ------------------------------
       - name: Build Release APK
-        run: ./gradlew assembleRelease
+        run: ./gradle_shared/gradlew assembleRelease
 
       # ------------------------------
       #  📦 UPLOAD DO APK RELEASE
