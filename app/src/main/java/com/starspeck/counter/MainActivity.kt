@@ -142,65 +142,55 @@ class MainActivity : ComponentActivity() {
 }
 
 /**
- * Retorna uma lista de inteiros (mesmo tamanho de counts) cuja soma = n e que
- * aproxima as proporções counts[i]/sum(counts) usando Largest Remainder Method.
+ * Retorna duas listas: (estimativaStar, estimativaShining)
  */
-fun proportionalEstimate(
+fun proportionalDualEstimate(
     counts1: List<Int>,
     counts2: List<Int>,
-    n: Int,
-    choose: Int
-): List<Int> {
+    n: Int
+): Pair<List<Int>, List<Int>> {
 
     val total = counts1.sum() + counts2.sum()
+
     if (total == 0 || n <= 0) {
-        return if (choose == 0)
-            List(counts1.size) { 0 }
-        else
+        return Pair(
+            List(counts1.size) { 0 },
             List(counts2.size) { 0 }
+        )
     }
 
-    // Cálculo dos alvos proporcionais
-    val target1 = counts1.map { it * n.toDouble() / total }
-    val target2 = counts2.map { it * n.toDouble() / total }
+    val allCounts = counts1 + counts2
+    val targets = allCounts.map { it * n.toDouble() / total }
 
-    // Parte inteira
-    val base1 = target1.map { it.toInt() }.toMutableList()
-    val base2 = target2.map { it.toInt() }.toMutableList()
-
-    var missing = n - (base1.sum() + base2.sum())
-
+    val base = targets.map { it.toInt() }.toMutableList()
+    var missing = n - base.sum()
     if (missing <= 0) {
-        return if (choose == 0) base1 else base2
+        return Pair(
+            base.take(counts1.size),
+            base.drop(counts1.size)
+        )
     }
 
-    // Cria lista combinada de restos
-    data class R(val frac: Double, val listId: Int, val index: Int)
+    // Resto global
+    data class R(val frac: Double, val index: Int)
 
-    val remainders = buildList {
-        target1.forEachIndexed { i, t ->
-            add(R(t - t.toInt(), 0, i)) // lista 0
-        }
-        target2.forEachIndexed { i, t ->
-            add(R(t - t.toInt(), 1, i)) // lista 1
-        }
+    val remainders = targets.mapIndexed { i, t ->
+        R(t - t.toInt(), i)
     }.sortedByDescending { it.frac }
 
     // Distribui missing
     var ri = 0
     while (missing > 0) {
         val r = remainders[ri % remainders.size]
-
-        if (r.listId == 0)
-            base1[r.index]++
-        else
-            base2[r.index]++
-
+        base[r.index]++
         missing--
         ri++
     }
 
-    return if (choose == 0) base1 else base2
+    val starList = base.take(counts1.size)
+    val shiningList = base.drop(counts1.size)
+
+    return Pair(starList, shiningList)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -305,8 +295,9 @@ fun MainScreen(c: Map<String, Int>, ds: DataStore<Preferences>, scope: Coroutine
                         val starCounts = (1..5).map { c["star_$it"] ?: 0 }
                         val shiningCounts = (1..5).map { c["shining_$it"] ?: 0 }
 
-                        starEstimate = proportionalEstimate(starCounts, shiningCounts, n, 0)
-                        shiningEstimate = proportionalEstimate(starCounts, shiningCounts, n, 1)
+                        val (se, sh) = proportionalDualEstimate(starCounts, shiningCounts, n)
+                        starEstimate = se
+                        shiningEstimate = sh
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
