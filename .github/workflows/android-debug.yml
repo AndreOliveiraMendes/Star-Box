@@ -23,6 +23,8 @@ jobs:
 
       - name: Gradle cache
         uses: gradle/actions/setup-gradle@v3
+        with:
+          wrapper-path: gradle_shared/gradlew
 
       - name: Create gradle.properties
         run: |
