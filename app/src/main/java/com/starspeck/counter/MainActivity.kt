@@ -141,6 +141,68 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+/**
+ * Retorna uma lista de inteiros (mesmo tamanho de counts) cuja soma = n e que
+ * aproxima as proporções counts[i]/sum(counts) usando Largest Remainder Method.
+ */
+fun proportionalEstimate(
+    counts1: List<Int>,
+    counts2: List<Int>,
+    n: Int,
+    choose: Int
+): List<Int> {
+
+    val total = counts1.sum() + counts2.sum()
+    if (total == 0 || n <= 0) {
+        return if (choose == 0)
+            List(counts1.size) { 0 }
+        else
+            List(counts2.size) { 0 }
+    }
+
+    // Cálculo dos alvos proporcionais
+    val target1 = counts1.map { it * n.toDouble() / total }
+    val target2 = counts2.map { it * n.toDouble() / total }
+
+    // Parte inteira
+    val base1 = target1.map { it.toInt() }.toMutableList()
+    val base2 = target2.map { it.toInt() }.toMutableList()
+
+    var missing = n - (base1.sum() + base2.sum())
+
+    if (missing <= 0) {
+        return if (choose == 0) base1 else base2
+    }
+
+    // Cria lista combinada de restos
+    data class R(val frac: Double, val listId: Int, val index: Int)
+
+    val remainders = buildList {
+        target1.forEachIndexed { i, t ->
+            add(R(t - t.toInt(), 0, i)) // lista 0
+        }
+        target2.forEachIndexed { i, t ->
+            add(R(t - t.toInt(), 1, i)) // lista 1
+        }
+    }.sortedByDescending { it.frac }
+
+    // Distribui missing
+    var ri = 0
+    while (missing > 0) {
+        val r = remainders[ri % remainders.size]
+
+        if (r.listId == 0)
+            base1[r.index]++
+        else
+            base2[r.index]++
+
+        missing--
+        ri++
+    }
+
+    return if (choose == 0) base1 else base2
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun App() {
@@ -177,9 +239,8 @@ fun App() {
                 context.dataStore,
                 scope,
                 onBack = { screen = "main" }
-                )
-            }
-
+            )
+        }
     }
 }
 
@@ -189,9 +250,20 @@ fun MainScreen(c: Map<String, Int>, ds: DataStore<Preferences>, scope: Coroutine
     val shining = c.filterKeys { it.startsWith("shining_") }.values.sum()
     val total = star + shining
 
+    // Estado para a estimativa
+    var estimateInput by remember { mutableStateOf("") }
+    var starEstimate by remember { mutableStateOf<List<Int>?>(null) }
+    var shiningEstimate by remember { mutableStateOf<List<Int>?>(null) }
+
+    val scroll = rememberScrollState()
+
     Column(
-        Modifier.fillMaxSize().padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+        Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+            .verticalScroll(scroll),
+        horizontalAlignment = Alignment.CenterHorizontally,
+
     ) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
             Side("Star Speck", Color.Cyan, "star_", ds, scope)
@@ -203,10 +275,60 @@ fun MainScreen(c: Map<String, Int>, ds: DataStore<Preferences>, scope: Coroutine
         Card(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp)) {
                 Text("Total: $total", fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                Text("Star: ${if(total>0) "%.1f%%".format(star*100f/total) else "0%"}", color = Color.Cyan)
-                Text("Shining: ${if(total>0) "%.1f%%".format(shining*100f/total) else "0%"}", color = Color.Yellow)
+                Text("Star: ${if (total > 0) "%.1f%%".format(star * 100f / total) else "0%"}", color = Color.Cyan)
+                Text("Shining: ${if (total > 0) "%.1f%%".format(shining * 100f / total) else "0%"}", color = Color.Yellow)
                 Spacer(Modifier.height(12.dp))
                 TextButton(onClick = toStats) { Text("Ver estatísticas detalhadas →") }
+
+                Spacer(Modifier.height(12.dp))
+
+                // Campo para N
+                OutlinedTextField(
+                    value = estimateInput,
+                    onValueChange = { estimateInput = it.filter { ch -> ch.isDigit() } },
+                    label = { Text("Estimativa para N baús") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(Modifier.height(8.dp))
+
+                Button(
+                    onClick = {
+                        val n = estimateInput.toIntOrNull() ?: 0
+                        if (n <= 0) {
+                            starEstimate = null
+                            shiningEstimate = null
+                            return@Button
+                        }
+
+                        val starCounts = (1..5).map { c["star_$it"] ?: 0 }
+                        val shiningCounts = (1..5).map { c["shining_$it"] ?: 0 }
+
+                        starEstimate = proportionalEstimate(starCounts, shiningCounts, n, 0)
+                        shiningEstimate = proportionalEstimate(starCounts, shiningCounts, n, 1)
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Calcular estimativa")
+                }
+
+                // Exibir resultados (se houver)
+                starEstimate?.let { se ->
+                    Spacer(Modifier.height(12.dp))
+                    Text("Estimativa — Star Speck", fontWeight = FontWeight.Bold)
+                    for (i in se.indices) {
+                        Text("  +${i + 1}: ${se[i]}")
+                    }
+                }
+
+                shiningEstimate?.let { sh ->
+                    Spacer(Modifier.height(8.dp))
+                    Text("Estimativa — Shining Star", fontWeight = FontWeight.Bold)
+                    for (i in sh.indices) {
+                        Text("  +${i + 1}: ${sh[i]}")
+                    }
+                }
             }
         }
     }
@@ -490,4 +612,3 @@ private fun StatsSection(
         Text("+$i → $value vezes ($pctCategory) [$pctTotal]")
     }
 }
-
