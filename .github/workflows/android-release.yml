@@ -32,7 +32,7 @@ jobs:
       #  CACHE do Gradle
       # -----------------------------
       - name: Gradle cache
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v5
 
       # -----------------------------
       #  RESTAURAR KEYSTORE
