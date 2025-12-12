@@ -1,0 +1,35 @@
+name: Update Submodules
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * *"
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Fetch submodule references
+        run: git submodule foreach 'git fetch'
+
+      - name: Update submodules
+        run: git submodule update --remote --recursive
+
+      - name: Commit & Push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          if git status --porcelain | grep "^ M"; then
+            git add .
+            git commit -m "chore: update submodules"
+            git push
+          else
+            echo "No changes detected"
+          fi
