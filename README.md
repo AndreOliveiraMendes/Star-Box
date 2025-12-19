@@ -25,7 +25,9 @@ Ele demonstra uma estrutura básica de app Android e inclui um fluxo simples de 
 .
 ├── .github
 │   └── workflows
-│       └── android-debug.yml
+│       ├── android-debug.yml
+│       ├── android-release.yml
+│       └── update-submodules.yml
 ├── .gitignore
 ├── .gitmodules
 ├── LICENSE
